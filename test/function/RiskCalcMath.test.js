@@ -77,7 +77,7 @@ app.http('RiskCalcMath', {
         riskLevel = "uninsurable"
         }
 
-        return {body: {totalScore, riskLevel, ageScore, bmiScore, bpScore, familyHistoryScore, bmi}};
+        return {body: totalScore, riskLevel, ageScore, bmiScore, bpScore, familyHistoryScore, bmi};
     }   
 
 });
