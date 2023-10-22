@@ -1,32 +1,83 @@
-async function start(){
-    const apiURL = "https://health-ins-risk-math.azurewebsites.net/"
+const { app } = require('@azure/functions');
 
-    const requestData = {
-        age: parseFloat(document.getElementById("age").value),
-        height: parseFloat(document.getElementById("height").value),
-        weight: parseFloat(document.getElementById("weight").value),
-        systolicBP: parseFloat(document.getElementById("systolicBP").value),
-        diastolicBP: parseFloat(document.getElementById("diastolicBP").value),
-        diabetes: document.getElementById("diabetes").value,
-        cancer: document.getElementById("cancer").value,
-        alzheimers: document.getElementById("alzheimers").value
-    }
-    const response = await fetch(apiURL)
-    const data = await response.json()
+app.http('RiskCalcMath', {
+    methods: ['GET', 'POST'],
+    authLevel: 'anonymous',
+    handler: async (request, context) => {
+        context.log(`Http function processed request for url "${request.url}"`);
 
-    // Display results
-    document.getElementById("ageScore").textContent = data.ageScore;
-    document.getElementById("bmiScore").textContent = data.bmiScore;
-    document.getElementById("bmiValue").textContent = data.bmi.toFixed(2);
-    document.getElementById("bpScore").textContent = data.bpScore;
-    document.getElementById("familyHistoryScore").textContent = data.familyHistoryScore;
-    document.getElementById("riskLevel").textContent = data.riskLevel;
-    document.getElementById("result").style.display = "block";
-}
+        const requestData = request.body;
+
+         // Calculate BMI
+        const weight = parseFloat(requestData.weight);
+        const height = parseFloat(requestData.height);
+        const bmi = ((weight / (height * height)) * 703);
+        const systolicBP = parseInt(requestData.systolicBP);
+        const diastolicBP = parseInt(requestData.diastolicBP);
  
-start()
+        // Initialize risk scores
+        let ageScore = 0;
+        let bmiScore = 0;
+        let bpScore = 0;
+        let familyHistoryScore = 0;
  
-function addAnotherPatient() {
-    document.getElementById("patientForm").reset();
-    document.getElementById("result").style.display = "none";
-}
+        // Calculate risk scores
+        if (data.age < 30) {
+            ageScore = 0;
+        } else if (requestData.age >= 30 && age < 45) {
+            ageScore = 10;
+        } else if (requestData.age >= 45 && age < 60){
+            ageScore = 20;
+        } else {
+            ageScore = 30
+        }
+ 
+        if (bmi <= 24.9) {
+            bmiScore = 0;
+        } else if (bmi >= 25 && bmi <= 29.9) {
+            bmiScore = 30;
+        } else {
+            bmiScore = 75;
+        }
+ 
+        if (systolicBP < 120 && diastolicBP < 80) {
+            bpScore = 0;
+        } else if(systolicBP >= 120 && systolicBP < 130 && diastolicBP < 80) {
+            bpScore = 15;
+        } else if(systolicBP >= 130 && systolicBP < 140 || diastolicBP >= 80 && diastolicBP < 90) {
+            bpScore = 30;
+        } else if(systolicBP >= 140 && systolicBP < 180 || diastolicBP >= 90 && diastolicBP < 120) {
+            bpScore = 75;
+        } else {
+            bpScore = 100;
+        }
+ 
+        if (data.diabetes === "y") {
+            familyHistoryScore += 10;
+        }
+        if (data.cancer === "y") {
+            familyHistoryScore += 10;
+        }
+        if (data.alzheimers === "y") {
+            familyHistoryScore += 10;
+        }
+ 
+        // Calculate total risk score
+        const totalScore = ageScore + bmiScore + bpScore + familyHistoryScore;
+
+        // Determine risk level
+        let riskLevel = "";
+        if (totalScore <=20) {
+        riskLevel = "low-risk";
+        } else if (totalScore > 20 && totalScore <= 50) {
+        riskLevel = "moderate-risk";
+        } else if (totalScore > 50 && totalScore <= 75){
+        riskLevel = "high-risk";
+        } else {
+        riskLevel = "uninsurable"
+        }
+
+        return {body: {totalScore, riskLevel, ageScore, bmiScore, bpScore, familyHistoryScore, bmi}};
+    }   
+
+});
