@@ -6,10 +6,6 @@ app.http('RiskCalcMath', {
     handler: async (request, context) => {
         context.log(`Http function processed request for url "${request.url}"`);
 
-        const name = request.query.get('name') || await request.text() || 'world';
-
-        return { body: `Hello, ${name}!` };
-
         const requestData = request.body;
 
          // Calculate BMI
@@ -83,7 +79,6 @@ app.http('RiskCalcMath', {
 
         //return {body: {totalScore, riskLevel, ageScore, bmiScore, bpScore, familyHistoryScore, bmi}};
         return {totalScore, riskLevel, ageScore, bmiScore, bpScore, familyHistoryScore, bmi}
-
 
     }
 });
